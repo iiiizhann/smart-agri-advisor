@@ -43,4 +43,6 @@ async function runWeatherETLPipeline(district = 'Pune') {
   return advisoryData;
 }
 
-module.exports = { runWeatherETLPipeline };
+module.exports = {
+  transformWeatherData, // ensure this is listed here
+};
