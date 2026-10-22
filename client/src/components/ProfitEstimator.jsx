@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Calculator, IndianRupee, TrendingUp, AlertCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 const COMMODITIES = ['Wheat', 'Soybean', 'Cotton', 'Tomato', 'Onion'];
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://agripulse-backend-3iyv.onrender.com';
 
 export default function ProfitEstimator({ district }) {
   const [commodity, setCommodity] = useState('Soybean');
@@ -13,7 +14,7 @@ export default function ProfitEstimator({ district }) {
   const calculateProfit = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/v1/advisory/estimate', {
+      const res = await axios.post(`${API_BASE_URL}/api/v1/advisory/estimate`, {
         district,
         commodity,
         acreage: Number(acreage)
@@ -98,18 +99,18 @@ export default function ProfitEstimator({ district }) {
 
               <div className="bg-slate-50 p-4 rounded-xl">
                 <p className="text-xs text-slate-500">Est. Input Costs</p>
-                <p className="text-lg font-bold text-slate-700">₹{result.estimatedTotalCost.toLocaleString()}</p>
+                <p className="text-lg font-bold text-slate-700">₹{result.estimatedTotalCost?.toLocaleString()}</p>
               </div>
 
               <div className="bg-slate-50 p-4 rounded-xl">
                 <p className="text-xs text-slate-500">Gross Revenue</p>
-                <p className="text-lg font-bold text-slate-900">₹{result.estimatedGrossRevenue.toLocaleString()}</p>
+                <p className="text-lg font-bold text-slate-900">₹{result.estimatedGrossRevenue?.toLocaleString()}</p>
               </div>
 
               <div className={`p-4 rounded-xl ${result.estimatedNetProfit >= 0 ? 'bg-emerald-50 text-emerald-900' : 'bg-red-50 text-red-900'}`}>
                 <p className="text-xs font-semibold">Net Margin</p>
                 <p className="text-lg font-black flex items-center">
-                  ₹{result.estimatedNetProfit.toLocaleString()}
+                  ₹{result.estimatedNetProfit?.toLocaleString()}
                   {result.estimatedNetProfit >= 0 ? (
                     <ArrowUpRight className="w-4 h-4 ml-1 text-emerald-600" />
                   ) : (
