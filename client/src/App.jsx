@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 const DISTRICTS = ['Pune', 'Nashik', 'Nagpur', 'Solapur', 'Kolhapur'];
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://agripulse-backend-3iyv.onrender.com';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('weather'); // 'weather' | 'mandi' | 'estimator'
@@ -48,7 +49,7 @@ export default function App() {
 
     // 1. Fetch Weather Records
     try {
-      const weatherRes = await axios.get(`http://localhost:5000/api/v1/advisory/weather?district=${targetDistrict}`);
+      const weatherRes = await axios.get(`${API_BASE_URL}/api/v1/advisory/weather?district=${targetDistrict}`);
       setWeatherRecords(weatherRes.data.data || []);
     } catch (err) {
       console.error('Weather fetch error:', err.response?.data || err.message);
@@ -56,7 +57,7 @@ export default function App() {
 
     // 2. Fetch Mandi Records
     try {
-      const mandiRes = await axios.get(`http://localhost:5000/api/v1/mandi?district=${targetDistrict}`);
+      const mandiRes = await axios.get(`${API_BASE_URL}/api/v1/mandi?district=${targetDistrict}`);
       setMandiRecords(mandiRes.data.data || []);
     } catch (err) {
       console.error('Mandi fetch error:', err.response?.data || err.message);
@@ -64,7 +65,7 @@ export default function App() {
 
     // 3. Fetch Disease & Microclimate Warnings
     try {
-      const diseaseRes = await axios.get(`http://localhost:5000/api/v1/advisory/disease-risk?district=${targetDistrict}`);
+      const diseaseRes = await axios.get(`${API_BASE_URL}/api/v1/advisory/disease-risk?district=${targetDistrict}`);
       setDiseaseAlerts(diseaseRes.data.data || []);
     } catch (err) {
       console.error('Disease risk fetch error:', err.response?.data || err.message);
@@ -78,14 +79,14 @@ export default function App() {
     setErrorMessage('');
 
     try {
-      await axios.post('http://localhost:5000/api/v1/advisory/sync', { district });
+      await axios.post(`${API_BASE_URL}/api/v1/advisory/sync`, { district });
     } catch (err) {
       console.error('Weather sync failed:', err.response?.data || err.message);
       setErrorMessage(`Weather sync failed: ${err.message}`);
     }
 
     try {
-      await axios.post('http://localhost:5000/api/v1/mandi/sync', { district });
+      await axios.post(`${API_BASE_URL}/api/v1/mandi/sync`, { district });
     } catch (err) {
       console.error('Mandi sync failed:', err.response?.data || err.message);
     }

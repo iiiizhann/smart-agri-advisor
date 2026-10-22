@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { X, Lock, Mail, User, ShieldCheck } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://agripulse-backend-3iyv.onrender.com';
+
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,7 +25,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     const endpoint = isRegister ? '/api/v1/auth/register' : '/api/v1/auth/login';
 
     try {
-      const res = await axios.post(`http://localhost:5000${endpoint}`, formData);
+      const res = await axios.post(`${API_BASE_URL}${endpoint}`, formData);
       localStorage.setItem('agri_token', res.data.token);
       localStorage.setItem('agri_user', JSON.stringify(res.data.user));
       onAuthSuccess(res.data.user);
