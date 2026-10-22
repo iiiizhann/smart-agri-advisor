@@ -1,8 +1,39 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user.model');
+
+// Define User Schema inline so missing file paths never crash the server
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
+    password: {
+      type: String,
+      required: true
+    },
+    role: {
+      type: String,
+      enum: ['farmer', 'admin'],
+      default: 'farmer'
+    }
+  },
+  { timestamps: true }
+);
+
+// Reuse existing model if already registered, otherwise register it
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 // POST /api/v1/auth/register
 router.post('/register', async (req, res) => {
@@ -14,7 +45,7 @@ router.post('/register', async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
 
     const existingUser = await User.findOne({ email });
@@ -22,10 +53,11 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
-    // Hash password
+    // Hash Password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Save User
     const user = new User({
       name,
       email,
@@ -35,9 +67,11 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
+    // Sign JWT Token
+    const secret = process.env.JWT_SECRET || 'agri_secure_jwt_secret_98765';
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET || 'agri_secure_jwt_secret_98765',
+      secret,
       { expiresIn: '7d' }
     );
 
@@ -68,17 +102,18 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
+    const secret = process.env.JWT_SECRET || 'agri_secure_jwt_secret_98765';
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET || 'agri_secure_jwt_secret_98765',
+      secret,
       { expiresIn: '7d' }
     );
 
