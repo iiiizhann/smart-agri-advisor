@@ -22,7 +22,7 @@ exports.getAdvisoryByDistrict = async (req, res) => {
 
 exports.triggerETLSync = async (req, res) => {
   try {
-    const { district = 'Pune' } = req.body;
+    const district = req.query.district || req.body?.district || 'Pune';
     const syncedData = await runWeatherETLPipeline(district);
 
     res.status(200).json({

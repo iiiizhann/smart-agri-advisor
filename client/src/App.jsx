@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import WeatherCard from './components/WeatherCard';
-import DiseaseAlerts from './components/DiseaseAlerts';
+import DiseaseAlerts from "./components/DiseaseAlerts";
 import TrendChart from './components/TrendChart';
 import MandiTable from './components/MandiTable';
 import ProfitEstimator from './components/ProfitEstimator';

@@ -9,21 +9,25 @@ function generateAdvisorySummary(temp, humidity, rain) {
   return 'Optimal conditions for general crop maintenance.';
 }
 
-async function runWeatherETLPipeline(district = 'Pune') {
-  const extracted = await fetchDistrictWeatherData(district);
-  const { rawData, lat, lon } = extracted;
+function transformWeatherData(extracted) {
+  if (!extracted || !extracted.rawData) {
+    throw new Error('Invalid raw weather payload received');
+  }
 
-  const temp = Math.round(rawData.main.temp);
-  const humidity = rawData.main.humidity;
-  const windSpeed = rawData.wind?.speed || 0;
-  const rainfall = rawData.rain?.['1h'] || 0;
+  const { rawData, lat, lon, district } = extracted;
+
+  const temp = Math.round(rawData.main?.temp ?? 0);
+  const humidity = rawData.main?.humidity ?? 0;
+  const windSpeed = rawData.wind?.speed ?? 0;
+  const rainfall = rawData.rain?.['1h'] ?? 0;
   const advisorySummary = generateAdvisorySummary(temp, humidity, rainfall);
 
-  const rawHash = `${district}-${temp}-${humidity}-${Math.floor(Date.now() / (1000 * 60 * 15))}`;
+  const targetDistrict = district || extracted.name || 'Unknown';
+  const rawHash = `${targetDistrict}-${temp}-${humidity}-${Math.floor(Date.now() / (1000 * 60 * 15))}`;
   const deduplicationHash = crypto.createHash('sha256').update(rawHash).digest('hex');
 
-  const advisoryData = {
-    district,
+  return {
+    district: targetDistrict,
     location: { lat, lon },
     temperature: temp,
     humidity,
@@ -33,16 +37,23 @@ async function runWeatherETLPipeline(district = 'Pune') {
     deduplicationHash,
     timestamp: new Date()
   };
+}
+
+async function runWeatherETLPipeline(district = 'Pune') {
+  const extracted = await fetchDistrictWeatherData(district);
+  const transformed = transformWeatherData(extracted);
 
   await WeatherAdvisory.updateOne(
-    { deduplicationHash },
-    { $setOnInsert: advisoryData },
+    { deduplicationHash: transformed.deduplicationHash },
+    { $setOnInsert: transformed },
     { upsert: true }
   );
 
-  return advisoryData;
+  return transformed;
 }
 
 module.exports = {
-  transformWeatherData, // ensure this is listed here
+  generateAdvisorySummary,
+  transformWeatherData,
+  runWeatherETLPipeline,
 };
